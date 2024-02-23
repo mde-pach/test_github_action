@@ -115,7 +115,7 @@ def extract_docstring_from_diffs(diffs: list[Diff]) -> list[DocumentedDefinition
                                     DocumentedDefinition(
                                         file=file_path,
                                         name=f.name,
-                                        start_line=diff.file_a.start_line,
+                                        start_line=diff.file_b.start_line,
                                         end_line=diff.file_b.end_line,
                                         docstring=ast.get_docstring(f),
                                         definition=ast.unparse(f),
