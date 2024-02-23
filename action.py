@@ -151,6 +151,11 @@ if __name__ == "__main__":
     repo = g.get_repo(repo_name)
     pr = repo.get_pull(pr_number)
     for doc in docs:
+        print(doc.file)
+        print(doc.name)
+        print(doc.docstring)
+        print(doc.start_line)
+
         pr.create_review_comment(
             "test",
             commit=pr.get_commits().reversed[0],
