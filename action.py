@@ -159,7 +159,7 @@ if __name__ == "__main__":
                     break
             pr.create_issue_comment(
                 f"""
-The definition of [{doc.name}](https://github.com/{repo_name}/pull/{pr.number}/files#diff-{file_sha}L{doc.start_line}-R{doc.end_line}) in file **{doc.file}** has been modified and the corresponding docstring seems
+The definition of [{doc.name}](https://github.com/{repo_name}/blob/{commit}/{doc.file}#L{doc.start_line}) in file **{doc.file}** has been modified and the corresponding docstring seems
 to not be up to date regarding these changes.
 
 If the docstring seems to be up to date, please ignore this message and resolve the issue.
