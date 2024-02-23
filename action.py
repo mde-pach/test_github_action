@@ -65,7 +65,7 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
 
 def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
     repo = git.Repo(repo_path)
-    print(repo)
+    print(repo.branches)
     base_commit = repo.commit(base_branch)
     pr_commit = repo.commit(pr_branch)
 
