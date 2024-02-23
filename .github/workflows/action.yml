@@ -30,3 +30,6 @@ jobs:
         env:
           PR_BRANCH: ${{ github.head_ref }}
           BASE_BRANCH: ${{ github.base_ref }}
+          GITHUB_TOKEN: ${{ github.token }}
+          REPOSITORY_NAME: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.number }}

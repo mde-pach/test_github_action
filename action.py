@@ -2,6 +2,7 @@ import os
 import git
 import ast
 from pydantic import BaseModel
+from github import Github
 
 
 class FileDiff(BaseModel):
@@ -133,6 +134,14 @@ if __name__ == "__main__":
     repo_path = "."
     pr_branch = os.environ.get("PR_BRANCH")
     base_branch = os.environ.get("BASE_BRANCH")
+    github_token = os.environ.get("GITHUB_TOKEN")
+    repository_name = os.environ.get("REPOSITORY_NAME")
+    pr_number = int(os.environ.get("PR_NUMBER"))
+    g = Github(github_token)
+    repo_name = repository_name
+    repo = g.get_repo(repo_name)
+    pr = repo.get_pull(pr_number)
+    pr.create_issue_comment("test")
     docs = get_modified_functions_diff(
         repo_path,
         pr_branch,
