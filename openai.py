@@ -1,4 +1,5 @@
 from openai import AsyncOpenAI
+import os
 
 
 class GPTClient:
@@ -19,6 +20,7 @@ class GPTClient:
         self.client = self._get_client(api_key=api_key)
 
     def ask(self, prompt: str) -> str:
-        return self.client.GPTClient.ask(
-            prompt=prompt, model=self.model, pre_prompt=self.pre_prompt
-        )
+        return self.client(prompt=prompt, model=self.model, pre_prompt=self.pre_prompt)
+
+
+GPTClient(api_key=os.environ.get("OPENAI_API_KEY"))

@@ -40,11 +40,13 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
                 file_a_start_line = int(file_a_start_line)
                 file_a_length = int(file_a_length)
                 file_a_end_line = file_a_start_line + file_a_length - 1
+                print(file_a_start_line, file_a_length, file_a_end_line)
                 file_b_line_info = diff_line.split(" ")[2]
                 file_b_start_line, file_b_length = file_b_line_info[1:].split(",")
                 file_b_start_line = int(file_b_start_line)
                 file_b_length = int(file_b_length)
                 file_b_end_line = file_b_start_line + file_b_length - 1
+                print(file_b_start_line, file_b_length, file_b_end_line)
                 diffs.append(
                     Diff(
                         file_a=FileDiff(
@@ -105,18 +107,18 @@ def extract_docstring_from_diffs(diffs: list[Diff]) -> list[DocumentedDefinition
                     for diff in diffs:
                         if diff.file_a.file_path == file_path:
                             if (
-                                f.lineno >= diff.file_a.start_line
-                                and f.lineno <= diff.file_a.end_line
+                                f.lineno >= diff.file_b.start_line
+                                and f.lineno <= diff.file_b.end_line
                             ) or (
-                                f.end_lineno >= diff.file_a.start_line
-                                and f.end_lineno <= diff.file_a.end_line
+                                f.end_lineno >= diff.file_b.start_line
+                                and f.end_lineno <= diff.file_b.end_line
                             ):
                                 docs.append(
                                     DocumentedDefinition(
                                         file=file_path,
                                         name=f.name,
-                                        start_line=diff.file_b.start_line,
-                                        end_line=diff.file_b.end_line,
+                                        start_line=f.lineno,
+                                        end_line=f.end_lineno,
                                         docstring=ast.get_docstring(f),
                                         definition=ast.unparse(f),
                                     )
@@ -134,11 +136,11 @@ def get_docstring(function_code):
 # Main execution
 if __name__ == "__main__":
     repo_path = "."
-    pr_branch = os.environ.get("PR_BRANCH")
-    base_branch = os.environ.get("BASE_BRANCH")
+    pr_branch = os.environ.get("PR_BRANCH", "develop")
+    base_branch = os.environ.get("BASE_BRANCH", "main")
     github_token = os.environ.get("GITHUB_TOKEN")
     repository_name = os.environ.get("REPOSITORY_NAME")
-    pr_number = int(os.environ.get("PR_NUMBER"))
+    pr_number = int(os.environ.get("PR_NUMBER", 0))
     commit, docs = get_modified_functions_diff(
         repo_path,
         pr_branch,
