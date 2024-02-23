@@ -11,7 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -19,12 +28,14 @@ jobs:
           python-version: "3.x"
 
       - name: Install Dependencies
-        run: |
-          pip install gitpython
-          # Any other dependencies your script needs
+        run: pip install -r requirements.txt
 
       - name: Print Modified Functions' Docstrings
         run: python action.py
         env:
           PR_BRANCH: ${{ github.head_ref }}
           BASE_BRANCH: ${{ github.base_ref }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          REPOSITORY_NAME: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.number }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
