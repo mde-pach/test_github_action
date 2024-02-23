@@ -14,7 +14,6 @@ class FileDiff(BaseModel):
     start_line: int
     end_line: int
     diff: str
-    diff_hash: str
 
 
 class Diff(BaseModel):
@@ -54,14 +53,12 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
                             start_line=file_a_start_line,
                             end_line=file_a_end_line,
                             diff=diff_item.diff.decode("utf-8"),
-                            diff_hash=diff_item.a_blob.hexsha,
                         ),
                         file_b=FileDiff(
                             file_path=diff_item.b_path,
                             start_line=file_b_start_line,
                             end_line=file_b_end_line,
                             diff=diff_item.diff.decode("utf-8"),
-                            diff_hash=diff_item.b_blob.hexsha,
                         ),
                     )
                 )
