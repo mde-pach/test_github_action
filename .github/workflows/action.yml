@@ -28,9 +28,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
-          # Any other dependencies your script needs
+        run: pip install -r requirements.txt
 
       - name: Print Modified Functions' Docstrings
         run: python action.py
