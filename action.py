@@ -186,7 +186,7 @@ if __name__ == "__main__":
                         ]
                     )
                     .choices[0]
-                    .content
+                    .message.content
                 )
                 print(response)
                 response_json = response.lstrip("```json").lstrip("```").rstrip("```")
