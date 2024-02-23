@@ -36,39 +36,3 @@ class GPTClient:
             # TODO: handle this error
             raise Exception
         return self.client.chat.completions.create(model=self.model, messages=messages)
-
-
-
-print(
-    gpt.ask(
-        [
-            {
-                "content": """
-```python
-def print_tutu():
-    \"\"\"
-    Prints tutu in the console
-    \"\"\"
-    print("tutu")
-```
- 
-```
-def print_tutu():
-    \"\"\"
-    Prints tutu in the console
-    \"\"\"
--    print("toto")
-+    print("tutu")
-```
-""",
-                "role": "user",
-            }
-        ]
-    )
-    .choices[0]
-    .message.content
-)
-
-
-def print_toto():
-    print("toto")
