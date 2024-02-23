@@ -49,13 +49,13 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
                 diffs.append(
                     Diff(
                         file_a=FileDiff(
-                            file_path=diff_item.a_path,
+                            file_path=diff_item.a_path or diff_item.b_path,
                             start_line=file_a_start_line,
                             end_line=file_a_end_line,
                             diff=diff_item.diff.decode("utf-8"),
                         ),
                         file_b=FileDiff(
-                            file_path=diff_item.b_path,
+                            file_path=diff_item.b_path or diff_item.a_path,
                             start_line=file_b_start_line,
                             end_line=file_b_end_line,
                             diff=diff_item.diff.decode("utf-8"),
