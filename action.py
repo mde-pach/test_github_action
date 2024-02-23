@@ -194,6 +194,7 @@ if __name__ == "__main__":
                     llm_response = json.loads(response_json)
                     print(llm_response)
                 except Exception as exc:
+                    print(response_json)
                     print(exc)
                     llm_response = {}
                 if llm_response.get("docstring", None):
