@@ -33,8 +33,8 @@ def get_docstring(function_code):
 
 # Main execution
 if __name__ == "__main__":
-    repo_path = "https://github.com/mde-pach/test_github_action"
-    pr_branch = ""
+    repo_path = "."
+    pr_branch = "develop"
     modified_functions = get_modified_functions_diff(repo_path, pr_branch)
     for func in modified_functions:
         print(get_docstring(func))
