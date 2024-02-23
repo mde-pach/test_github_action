@@ -65,6 +65,7 @@ def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
     modified_functions = []
 
     diffs = get_diffs(base_commit.diff(pr_commit, paths="*.py", create_patch=True))
+    print(diffs)
     docs = extract_docstring_from_diffs(diffs)
     import pprint
 
