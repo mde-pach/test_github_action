@@ -20,7 +20,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install gitpython
+          pip install -r requirements.txt
           # Any other dependencies your script needs
 
       - name: Print Modified Functions' Docstrings
