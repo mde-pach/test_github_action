@@ -65,7 +65,7 @@ def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
     modified_functions = []
 
     diffs = get_diffs(base_commit.diff(pr_commit, paths="*.py", create_patch=True))
-    print(diffs)
+    # print(diffs)
     docs = extract_docstring_from_diffs(diffs)
     import pprint
 
@@ -88,18 +88,26 @@ def extract_docstring_from_diffs(diffs: list[Diff]):
     """
 
     docs = []
-    for file_path in [diff.file_a.file_path for diff in diffs]:
+    for file_path in {diff.file_a.file_path for diff in diffs}:
         with open(file_path, "r") as file:
             code = file.read()
             tree = ast.parse(code)
-            definitions = [
-                f
-                for f in ast.walk(tree)
-                if isinstance(f, ast.FunctionDef) or isinstance(f, ast.ClassDef)
-            ]
-            docs += [
-                {f.name: ast.get_docstring(f) for f in definitions},
-            ]
+            for f in ast.walk(tree):
+                if isinstance(f, ast.FunctionDef) or isinstance(f, ast.ClassDef):
+                    for diff in diffs:
+                        if diff.file_a.file_path == file_path:
+                            if (
+                                f.lineno >= diff.file_a.start_line
+                                and f.lineno <= diff.file_a.end_line
+                            ):
+                                docs.append({f.name: ast.get_docstring(f)})
+                                break
+                            elif (
+                                f.end_lineno >= diff.file_a.start_line
+                                and f.end_lineno <= diff.file_a.end_line
+                            ):
+                                docs.append({f.name: ast.get_docstring(f)})
+                                break
     return docs
 
 
@@ -114,6 +122,6 @@ if __name__ == "__main__":
     repo_path = "."
     pr_branch = "develop"
     modified_functions = get_modified_functions_diff(repo_path, pr_branch)
-    print(modified_functions)
+    # print(modified_functions)
     for func in modified_functions:
         print(get_docstring(func))
