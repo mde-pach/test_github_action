@@ -64,13 +64,17 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
     return diffs
 
 
-def get_modified_functions_diff(
-    repo_path, pr_branch, base_branch=os.environ.get("BASE_BRANCH")
-):
+def get_modified_functions_diff(repo_path, pr_branch, base_branch):
     repo = git.Repo(repo_path)
-    print(repo.branches)
-    base_commit = repo.commit(base_branch)
-    pr_commit = repo.commit(pr_branch)
+    pr_commit = None
+    base_commit = None
+    for ref in repo.remotes.origin.refs:
+        if ref.remote_head == pr_branch:
+            pr_commit = ref.commit
+        elif ref.remote_head == base_branch:
+            base_commit = ref.commit
+    if pr_commit is None or base_commit is None:
+        raise ValueError("Branch not found")
 
     diffs = get_diffs(base_commit.diff(pr_commit, paths="*.py", create_patch=True))
     docs = extract_docstring_from_diffs(diffs)
@@ -128,5 +132,10 @@ def get_docstring(function_code):
 if __name__ == "__main__":
     repo_path = "."
     pr_branch = os.environ.get("PR_BRANCH")
-    docs = get_modified_functions_diff(repo_path, pr_branch)
+    base_branch = os.environ.get("BASE_BRANCH")
+    docs = get_modified_functions_diff(
+        repo_path,
+        pr_branch,
+        base_branch,
+    )
     # print(docs)
