@@ -23,7 +23,6 @@ class Diff(BaseModel):
 
 class DocumentedDefinition(BaseModel):
     file: str
-    file_diff: str
     name: str
     start_line: int
     end_line: int
@@ -115,7 +114,6 @@ def extract_docstring_from_diffs(diffs: list[Diff]) -> list[DocumentedDefinition
                                 docs.append(
                                     DocumentedDefinition(
                                         file=file_path,
-                                        file_diff=diff.file_a.diff_hash,
                                         name=f.name,
                                         start_line=diff.file_a.start_line,
                                         end_line=diff.file_b.end_line,
