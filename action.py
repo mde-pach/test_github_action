@@ -125,7 +125,7 @@ def extract_docstring_from_diffs(
                                         start_line=f.lineno,
                                         end_line=f.end_lineno,
                                         docstring=get_docstring(f),
-                                        definition=ast.dump(f),
+                                        definition=ast.unparse(f),
                                     )
 
                                 docs[file_path][f.name].diffs.append(diff)
