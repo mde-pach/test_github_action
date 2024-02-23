@@ -1,8 +1,10 @@
+import json
 import os
 import git
 import ast
 from pydantic import BaseModel
-from github import Github, Commit
+from github import Github
+from openai_client import GPTClient
 
 
 class FileDiff(BaseModel):
@@ -13,12 +15,12 @@ class FileDiff(BaseModel):
     file_path: str
     start_line: int
     end_line: int
-    diff: str
 
 
 class Diff(BaseModel):
     file_a: FileDiff
     file_b: FileDiff
+    diff: str
 
 
 class DocumentedDefinition(BaseModel):
@@ -28,6 +30,7 @@ class DocumentedDefinition(BaseModel):
     end_line: int
     docstring: str | None
     definition: str
+    diffs: list[str] = []
 
 
 def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
@@ -53,14 +56,13 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
                             file_path=diff_item.a_path or diff_item.b_path,
                             start_line=file_a_start_line,
                             end_line=file_a_end_line,
-                            diff=diff_item.diff.decode("utf-8"),
                         ),
                         file_b=FileDiff(
                             file_path=diff_item.b_path or diff_item.a_path,
                             start_line=file_b_start_line,
                             end_line=file_b_end_line,
-                            diff=diff_item.diff.decode("utf-8"),
                         ),
+                        diff=diff_item.diff.decode("utf-8"),
                     )
                 )
     return diffs
@@ -92,12 +94,14 @@ def get_modified_functions_diff(repo_path, pr_branch, base_branch):
     return pr_commit, docs
 
 
-def extract_docstring_from_diffs(diffs: list[Diff]) -> list[DocumentedDefinition]:
+def extract_docstring_from_diffs(
+    diffs: list[Diff],
+) -> dict[str, dict[str, DocumentedDefinition]]:
     """
     Test Toto
     """
 
-    docs = []
+    docs: dict[str, dict[str, DocumentedDefinition]] = {}
     for file_path in {diff.file_a.file_path for diff in diffs}:
         with open(file_path, "r") as file:
             code = file.read()
@@ -113,17 +117,20 @@ def extract_docstring_from_diffs(diffs: list[Diff]) -> list[DocumentedDefinition
                                 f.end_lineno >= diff.file_b.start_line
                                 and f.end_lineno <= diff.file_b.end_line
                             ):
-                                docs.append(
-                                    DocumentedDefinition(
+                                if file_path not in docs:
+                                    docs[file_path] = {}
+
+                                if f.name not in docs[file_path]:
+                                    docs[file_path][f.name] = DocumentedDefinition(
                                         file=file_path,
                                         name=f.name,
                                         start_line=f.lineno,
                                         end_line=f.end_lineno,
-                                        docstring=ast.get_docstring(f),
-                                        definition=ast.unparse(f),
+                                        docstring=get_docstring(f),
+                                        definition=ast.dump(f),
                                     )
-                                )
-                                break
+
+                                docs[file_path][f.name].diffs.append(diff)
     return docs
 
 
@@ -150,24 +157,58 @@ if __name__ == "__main__":
     repo_name = repository_name
     repo = g.get_repo(repo_name)
     pr = repo.get_pull(pr_number)
-    for doc in docs:
-        if doc.docstring is None:
-            continue
-        else:
-            print(doc.docstring, doc.file, doc.start_line, doc.end_line)
-            files = pr.get_files()
-            for file in files:
-                if file.filename == doc.file:
-                    file_sha = file.sha
-                    break
-            pr.create_issue_comment(
-                f"""
-The definition of [{doc.name}](https://github.com/{repo_name}/blob/{commit}/{doc.file}#L{doc.start_line}) in file **{doc.file}** has been modified and the corresponding docstring seems
-to not be up to date regarding these changes.
 
-If the docstring seems to be up to date, please ignore this message and resolve the issue.
-"""
-            )
+    openai = GPTClient(
+        os.environ.get("OPENAI_API_KEY"),
+        pre_prompt=(
+            "You are a github application name `Grumpy Cat` designed to help code maintainability. "
+            "You will receive a definition of a python function or class documented with a docstring and all the related git diff about this function or class separated in different code blocks. "
+            'You must answer a valid json as {"docstring": "your answer"} formatted using json markdown code block. '
+            "If the diff doesn't alter the function docstring, you should return `null` as the docstring. "
+            "If the diff alters the function docstring, you should return the new docstring as the docstring. "
+            "Consider only as an alteration if the diff is about something already present in the docstring. "
+        ),
+    )
+
+    for file_path, definitions in docs.items():
+        for name, definition in definitions.items():
+            if definition.docstring is None:
+                continue
+            else:
+                diffs = ""
+                for diff in definition.diffs:
+                    diffs += f"```diff\n{diff}\n```\n"
+
+                response: str = (
+                    openai.ask(
+                        [
+                            {
+                                "user": "developer",
+                                "content": f"```python\n{definition.definition}```\n{diffs}",
+                            }
+                        ]
+                    )
+                    .choices[0]
+                    .content
+                )
+                response_json = response.lstrip("```json").lstrip("```").rstrip("```")
+                llm_response = json.loads(response_json)
+                if llm_response.get("docstring", None):
+                    pr.create_issue_comment(
+                        f"""
+                        The definition of [{definition.name}](https://github.com/{repo_name}/blob/{commit}/{definition.file}#L{definition.start_line}) in file **{definition.file}** has been modified and the corresponding docstring seems
+                        to not be up to date regarding these changes.
+
+                        A new docstring has been proposed by the 😾 `Grumpy Cat` 🤖 bot:
+                        ```python
+                        \"\"\"
+                        {llm_response.get("docstring")}
+                        \"\"\"
+                        ```
+
+                        If the docstring seems to be up to date, please ignore this message and resolve the issue.
+                        """
+                    )
 
         # print(doc.name)
         # print(doc.docstring)

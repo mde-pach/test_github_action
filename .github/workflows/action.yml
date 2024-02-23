@@ -38,3 +38,4 @@ jobs:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           REPOSITORY_NAME: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.number }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -38,26 +38,28 @@ class GPTClient:
         return self.client.chat.completions.create(model=self.model, messages=messages)
 
 
-gpt = GPTClient(
-    api_key=os.environ.get("OPENAI_API_KEY"),
-    pre_prompt=(
-        "You are a github application designed to help code maintainability. "
-        "You will receive a git diff of a python code and the docstring of the function. "
-        'You must answer with a json only formatted as {"docstring": '
-        "}"
-        "If the diff doesn't alter the function docstring, you should return null as the docstring. "
-        "If the diff alters the function docstring, you should return the new docstring as the docstring. "
-        "Consider only as an alteration if the diff is about something already present in the docstring. "
-    ),
-)
-
 
 print(
     gpt.ask(
         [
             {
                 "content": """
-
+```python
+def print_tutu():
+    \"\"\"
+    Prints tutu in the console
+    \"\"\"
+    print("tutu")
+```
+ 
+```
+def print_tutu():
+    \"\"\"
+    Prints tutu in the console
+    \"\"\"
+-    print("toto")
++    print("tutu")
+```
 """,
                 "role": "user",
             }
