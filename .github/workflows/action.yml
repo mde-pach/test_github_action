@@ -15,8 +15,11 @@ jobs:
 
       - name: Fetch main
         run: |
-          git fetch origin main
-          git checkout -b main origin/main
+          git fetch origin ${{ github.head_ref }}
+          git fetch origin ${{ github.base_ref }}
+          git checkout origin ${{ github.head_ref }}
+          git checkout -
+          git checkout origin/${{ github.base_ref }}
           git checkout -
 
       - name: Set up Python
