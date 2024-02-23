@@ -1,5 +1,56 @@
 import git
-from ast import parse, FunctionDef
+import ast
+from pydantic import BaseModel
+
+
+class FileDiff(BaseModel):
+    file_path: str
+    start_line: int
+    end_line: int
+    diff: str
+
+
+class Diff(BaseModel):
+    file_a: FileDiff
+    file_b: FileDiff
+
+
+def get_diffs(diff_index: git.DiffIndex) -> list[Diff]:
+    diffs = []
+    for diff_item in diff_index:
+        for diff_line in diff_item.diff.decode("utf-8").splitlines():
+            if diff_line.startswith("@@"):
+                # Extract the start line number and the length of changes in the new file
+                line_info = diff_line.split(" ")[2]  # Gets the '+start2,len2' part
+                start_line, length = line_info[1:].split(
+                    ","
+                )  # Remove the '+' and split start2 and len2
+
+                # Convert start_line and length to integers
+                start_line = int(start_line)
+                length = int(length)
+
+                # Calculate the end line number
+                end_line = (
+                    start_line + length - 1
+                )  # Subtract 1 since start_line is included
+                diffs.append(
+                    Diff(
+                        file_a=FileDiff(
+                            file_path=diff_item.a_path,
+                            start_line=start_line,
+                            end_line=end_line,
+                            diff=diff_item.diff.decode("utf-8"),
+                        ),
+                        file_b=FileDiff(
+                            file_path=diff_item.b_path,
+                            start_line=start_line,
+                            end_line=end_line,
+                            diff=diff_item.diff.decode("utf-8"),
+                        ),
+                    )
+                )
+    return diffs
 
 
 def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
@@ -7,22 +58,42 @@ def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
     base_commit = repo.commit(base_branch)
     pr_commit = repo.commit(pr_branch)
 
-    diffs = base_commit.diff(pr_commit, paths="*.py", create_patch=True)
+    diffs = base_commit.diff(pr_commit, paths="*.py")
     modified_functions = []
 
+    _diffs = []
     for diff in diffs:
         if diff.change_type in ["A", "M"]:  # Added or Modified files
-            file_path = diff.b_path  # Path to the modified file
-            patch = diff.diff.decode("utf-8")  # Diff patch text
-            modified_functions.extend(extract_functions_from_patch(file_path, patch))
+            _diffs.append(diff.a_blob)
+    diffs = base_commit.diff(pr_commit, paths="*.py", create_patch=True)
+    import pprint
+
+    pprint.pprint(get_diffs(diffs))
+    # for diff in diffs:
+    #     if diff.a_blob in _diffs:
+    #         print(diff)
+    #         modified_functions.extend(diff.diff.decode("utf-8").split("\n"))
+    # file_path = diff.b_path  # Path to the modified file
+    # patch = diff.diff.decode("utf-8")  # Diff patch text
+    # modified_functions.extend(extract_functions_from_patch(file_path, patch))
 
     return modified_functions
 
 
-def extract_functions_from_patch(file_path, patch_text):
-    # Logic to parse the patch text, identify function edits, and extract those functions
-    # You may need to use regular expressions or other parsing methods to extract the edited lines/functions
-    pass
+def extract_docstring_from_function_code(code):
+    """
+    Test
+    """
+    tree = ast.parse(code)
+    definitions = [
+        f
+        for f in ast.walk(tree)
+        if isinstance(f, ast.FunctionDef) or isinstance(f, ast.ClassDef)
+    ]
+    docs = [
+        {f.name: ast.get_docstring(f) for f in definitions},
+    ]
+    return docs
 
 
 def get_docstring(function_code):
@@ -36,5 +107,6 @@ if __name__ == "__main__":
     repo_path = "."
     pr_branch = "develop"
     modified_functions = get_modified_functions_diff(repo_path, pr_branch)
+    print(modified_functions)
     for func in modified_functions:
         print(get_docstring(func))
