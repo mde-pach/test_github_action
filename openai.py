@@ -17,3 +17,8 @@ class GPTClient:
     def refresh_client(self, api_key: str) -> None:
         self._api_key = api_key
         self.client = self._get_client(api_key=api_key)
+
+    def ask(self, prompt: str) -> str:
+        return self.client.GPTClient.ask(
+            prompt=prompt, model=self.model, pre_prompt=self.pre_prompt
+        )
