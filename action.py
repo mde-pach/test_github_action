@@ -84,7 +84,7 @@ def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
 
 def extract_docstring_from_diffs(diffs: list[Diff]):
     """
-    Test
+    Test Toto
     """
 
     docs = []
