@@ -22,7 +22,9 @@ class Diff(BaseModel):
 
 
 class DocumentedDefinition(BaseModel):
+    file: str
     name: str
+    start_line: int
     docstring: str | None
     definition: str
 
@@ -88,7 +90,7 @@ def get_modified_functions_diff(repo_path, pr_branch, base_branch):
     # patch = diff.diff.decode("utf-8")  # Diff patch text
     # modified_functions.extend(extract_functions_from_patch(file_path, patch))
 
-    return docs
+    return pr_commit, docs
 
 
 def extract_docstring_from_diffs(diffs: list[Diff]) -> list[DocumentedDefinition]:
@@ -114,7 +116,9 @@ def extract_docstring_from_diffs(diffs: list[Diff]) -> list[DocumentedDefinition
                             ):
                                 docs.append(
                                     DocumentedDefinition(
+                                        file=file_path,
                                         name=f.name,
+                                        start_line=f.lineno,
                                         docstring=ast.get_docstring(f),
                                         definition=ast.unparse(f),
                                     )
@@ -137,17 +141,22 @@ if __name__ == "__main__":
     github_token = os.environ.get("GITHUB_TOKEN")
     repository_name = os.environ.get("REPOSITORY_NAME")
     pr_number = int(os.environ.get("PR_NUMBER"))
-    g = Github(github_token)
-    repo_name = repository_name
-    repo = g.get_repo(repo_name)
-    pr = repo.get_pull(pr_number)
-    pr.create_issue_comment("test")
-    docs = get_modified_functions_diff(
+    commit, docs = get_modified_functions_diff(
         repo_path,
         pr_branch,
         base_branch,
     )
+    g = Github(github_token)
+    repo_name = repository_name
+    repo = g.get_repo(repo_name)
+    pr = repo.get_pull(pr_number)
     for doc in docs:
-        print(doc.name)
-        print(doc.docstring)
-        print(doc.definition)
+        pr.create_review_comment(
+            "test",
+            commit=commit,
+            path=doc.file,
+            line=doc.start_line,
+        )
+        # print(doc.name)
+        # print(doc.docstring)
+        # print(doc.definition)
