@@ -157,9 +157,8 @@ if __name__ == "__main__":
             "You are a github application name `Grumpy Cat` designed to help code maintainability. "
             "You will receive a definition of a python function or class documented with a docstring and all the related git diff about this function or class separated in different code blocks. "
             'You must answer a valid json as {"docstring": "your answer"} formatted using json markdown code block. '
-            "If the diff doesn't alter the function docstring, you should return `null` as the docstring. "
-            "If the diff alters the function docstring, you should return the new docstring as the docstring. "
-            "Consider only as an alteration if the diff is about something already present in the docstring. "
+            "If the diff shouldn't trigger a docstring update, return `null` as the docstring. "
+            "If the diff should trigger a docstring update, return the new docstring. "
         ),
     )
 
@@ -200,16 +199,16 @@ if __name__ == "__main__":
                 if llm_response.get("docstring", None):
                     pr.create_issue_comment(
                         f"""
-                        The definition of [{definition.name}](https://github.com/{repo_name}/blob/{commit}/{definition.file}#L{definition.start_line}) in file **{definition.file}** has been modified and the corresponding docstring seems
-                        to not be up to date regarding these changes.
+The definition of [{definition.name}](https://github.com/{repo_name}/blob/{commit}/{definition.file}#L{definition.start_line}) in file **{definition.file}** has been modified and the corresponding docstring seems
+to not be up to date regarding these changes.
 
-                        A new docstring has been proposed by the 😾 `Grumpy Cat` 🤖 bot:
-                        ```python
-                        \"\"\"
-                        {llm_response.get("docstring")}
-                        \"\"\"
-                        ```
+A new docstring has been proposed by the 😾 `Grumpy Cat` 🤖 bot:
+```python
+\"\"\"
+{llm_response.get("docstring")}
+\"\"\"
+```
 
-                        If the docstring seems to be up to date, please ignore this message and resolve the issue.
-                        """
+If the docstring seems to be up to date, please ignore this message and resolve the issue.
+"""
                     )
