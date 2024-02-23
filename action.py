@@ -119,6 +119,7 @@ def extract_docstring_from_diffs(
                                     docs[file_path] = {}
 
                                 if f.name not in docs[file_path]:
+                                    print(ast.get_docstring(f))
                                     docs[file_path][f.name] = DocumentedDefinition(
                                         file=file_path,
                                         name=f.name,
