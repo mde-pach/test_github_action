@@ -152,6 +152,7 @@ if __name__ == "__main__":
         if doc.docstring is None:
             continue
         else:
+            print(doc.docstring)
             files = pr.get_files()
             for file in files:
                 if file.filename == doc.file:
