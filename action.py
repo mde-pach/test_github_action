@@ -138,4 +138,7 @@ if __name__ == "__main__":
         pr_branch,
         base_branch,
     )
-    print(docs)
+    for doc in docs:
+        print(doc.name)
+        print(doc.docstring)
+        print(doc.definition)
