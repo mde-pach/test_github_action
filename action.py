@@ -30,7 +30,7 @@ class DocumentedDefinition(BaseModel):
     end_line: int
     docstring: str | None
     definition: str
-    diffs: list[str] = []
+    diffs: list[Diff] = []
 
 
 def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
@@ -170,14 +170,15 @@ if __name__ == "__main__":
 
     for file_path, definitions in docs.items():
         for name, definition in definitions.items():
-            print(name, definition)
-            print(definition.diffs)
             if definition.docstring is None:
                 continue
             else:
+                print(name, definition)
+                print(definition.diffs)
+
                 diffs = ""
                 for diff in definition.diffs:
-                    diffs += f"```diff\n{diff}\n```\n"
+                    diffs += f"```diff\n{diff.diff}\n```\n"
 
                 response: str = (
                     openai.ask(
@@ -191,6 +192,7 @@ if __name__ == "__main__":
                     .choices[0]
                     .content
                 )
+                print(response)
                 response_json = response.lstrip("```json").lstrip("```").rstrip("```")
                 try:
                     llm_response = json.loads(response_json)
