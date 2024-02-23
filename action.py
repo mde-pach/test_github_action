@@ -4,6 +4,10 @@ from pydantic import BaseModel
 
 
 class FileDiff(BaseModel):
+    """
+    Add a docstring
+    """
+
     file_path: str
     start_line: int
     end_line: int
