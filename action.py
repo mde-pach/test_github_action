@@ -138,4 +138,4 @@ if __name__ == "__main__":
         pr_branch,
         base_branch,
     )
-    # print(docs)
+    print(docs)
