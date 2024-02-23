@@ -24,7 +24,7 @@ jobs:
           # Any other dependencies your script needs
 
       - name: Print Modified Functions' Docstrings
-        run: python path_to_your_script.py
+        run: python action.py
         env:
           PR_BRANCH: ${{ github.head_ref }}
           BASE_BRANCH: ${{ github.base_ref }}
