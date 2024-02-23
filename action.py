@@ -37,33 +37,29 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
     for diff_item in diff_index:
         for diff_line in diff_item.diff.decode("utf-8").splitlines():
             if diff_line.startswith("@@"):
-                # Extract the start line number and the length of changes in the new file
-                line_info = diff_line.split(" ")[2]  # Gets the '+start2,len2' part
-                start_line, length = line_info[1:].split(
-                    ","
-                )  # Remove the '+' and split start2 and len2
-
-                # Convert start_line and length to integers
-                start_line = int(start_line)
-                length = int(length)
-
-                # Calculate the end line number
-                end_line = (
-                    start_line + length - 1
-                )  # Subtract 1 since start_line is included
+                file_a_line_info = diff_line.split(" ")[1]
+                file_a_start_line, file_a_length = file_a_line_info[1:].split(",")
+                file_a_start_line = int(file_a_start_line)
+                file_a_length = int(file_a_length)
+                file_a_end_line = file_a_start_line + file_a_length - 1
+                file_b_line_info = diff_line.split(" ")[2]
+                file_b_start_line, file_b_length = file_b_line_info[1:].split(",")
+                file_b_start_line = int(file_b_start_line)
+                file_b_length = int(file_b_length)
+                file_b_end_line = file_b_start_line + file_b_length - 1
                 diffs.append(
                     Diff(
                         file_a=FileDiff(
                             file_path=diff_item.a_path,
-                            start_line=start_line,
-                            end_line=end_line,
+                            start_line=file_a_start_line,
+                            end_line=file_a_end_line,
                             diff=diff_item.diff.decode("utf-8"),
                             diff_hash=diff_item.a_blob.hexsha,
                         ),
                         file_b=FileDiff(
                             file_path=diff_item.b_path,
-                            start_line=start_line,
-                            end_line=end_line,
+                            start_line=file_b_start_line,
+                            end_line=file_b_end_line,
                             diff=diff_item.diff.decode("utf-8"),
                             diff_hash=diff_item.b_blob.hexsha,
                         ),
