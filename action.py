@@ -180,7 +180,7 @@ if __name__ == "__main__":
                     openai.ask(
                         [
                             {
-                                "user": "developer",
+                                "role": "developer",
                                 "content": f"```python\n{definition.definition}```\n{diffs}",
                             }
                         ]
