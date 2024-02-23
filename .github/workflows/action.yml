@@ -1,0 +1,30 @@
+name: Print Docstrings of Edited Functions
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.py"
+
+jobs:
+  print-docstrings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Install Dependencies
+        run: |
+          pip install gitpython
+          # Any other dependencies your script needs
+
+      - name: Print Modified Functions' Docstrings
+        run: python path_to_your_script.py
+        env:
+          PR_BRANCH: ${{ github.head_ref }}
+          BASE_BRANCH: ${{ github.base_ref }}
