@@ -19,6 +19,12 @@ class Diff(BaseModel):
     file_b: FileDiff
 
 
+class DocumentedDefinition(BaseModel):
+    name: str
+    docstring: str
+    definition: str
+
+
 def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
     diffs = []
     for diff_item in diff_index:
@@ -54,6 +60,8 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
                         ),
                     )
                 )
+    print(diffs[0].file_a.diff)
+    print(diffs[0])
     return diffs
 
 
