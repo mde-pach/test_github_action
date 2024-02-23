@@ -1,3 +1,4 @@
+import os
 import git
 import ast
 from pydantic import BaseModel
@@ -63,7 +64,9 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
     return diffs
 
 
-def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
+def get_modified_functions_diff(
+    repo_path, pr_branch, base_branch=os.environ.get("BASE_BRANCH")
+):
     repo = git.Repo(repo_path)
     print(repo.branches)
     base_commit = repo.commit(base_branch)
@@ -124,6 +127,6 @@ def get_docstring(function_code):
 # Main execution
 if __name__ == "__main__":
     repo_path = "."
-    pr_branch = "develop"
+    pr_branch = os.environ.get("PR_BRANCH")
     docs = get_modified_functions_diff(repo_path, pr_branch)
     # print(docs)
