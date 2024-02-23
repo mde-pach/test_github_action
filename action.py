@@ -21,7 +21,7 @@ class Diff(BaseModel):
 
 class DocumentedDefinition(BaseModel):
     name: str
-    docstring: str
+    docstring: str | None
     definition: str
 
 
@@ -68,14 +68,8 @@ def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
     base_commit = repo.commit(base_branch)
     pr_commit = repo.commit(pr_branch)
 
-    modified_functions = []
-
     diffs = get_diffs(base_commit.diff(pr_commit, paths="*.py", create_patch=True))
-    # print(diffs)
     docs = extract_docstring_from_diffs(diffs)
-    import pprint
-
-    pprint.pprint(docs)
 
     # for diff in diffs:
     #     if diff.a_blob in _diffs:
@@ -85,10 +79,10 @@ def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
     # patch = diff.diff.decode("utf-8")  # Diff patch text
     # modified_functions.extend(extract_functions_from_patch(file_path, patch))
 
-    return modified_functions
+    return docs
 
 
-def extract_docstring_from_diffs(diffs: list[Diff]):
+def extract_docstring_from_diffs(diffs: list[Diff]) -> list[DocumentedDefinition]:
     """
     Test Toto
     """
@@ -105,14 +99,17 @@ def extract_docstring_from_diffs(diffs: list[Diff]):
                             if (
                                 f.lineno >= diff.file_a.start_line
                                 and f.lineno <= diff.file_a.end_line
-                            ):
-                                docs.append({f.name: ast.get_docstring(f)})
-                                break
-                            elif (
+                            ) or (
                                 f.end_lineno >= diff.file_a.start_line
                                 and f.end_lineno <= diff.file_a.end_line
                             ):
-                                docs.append({f.name: ast.get_docstring(f)})
+                                docs.append(
+                                    DocumentedDefinition(
+                                        name=f.name,
+                                        docstring=ast.get_docstring(f),
+                                        definition=ast.unparse(f),
+                                    )
+                                )
                                 break
     return docs
 
@@ -127,7 +124,5 @@ def get_docstring(function_code):
 if __name__ == "__main__":
     repo_path = "."
     pr_branch = "develop"
-    modified_functions = get_modified_functions_diff(repo_path, pr_branch)
-    # print(modified_functions)
-    for func in modified_functions:
-        print(get_docstring(func))
+    docs = get_modified_functions_diff(repo_path, pr_branch)
+    print(docs)
