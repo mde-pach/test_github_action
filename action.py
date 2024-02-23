@@ -15,7 +15,7 @@ class Diff(BaseModel):
     file_b: FileDiff
 
 
-def get_diffs(diff_index: git.DiffIndex) -> list[Diff]:
+def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
     diffs = []
     for diff_item in diff_index:
         for diff_line in diff_item.diff.decode("utf-8").splitlines():
@@ -58,17 +58,14 @@ def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
     base_commit = repo.commit(base_branch)
     pr_commit = repo.commit(pr_branch)
 
-    diffs = base_commit.diff(pr_commit, paths="*.py")
     modified_functions = []
 
-    _diffs = []
-    for diff in diffs:
-        if diff.change_type in ["A", "M"]:  # Added or Modified files
-            _diffs.append(diff.a_blob)
-    diffs = base_commit.diff(pr_commit, paths="*.py", create_patch=True)
+    diffs = get_diffs(base_commit.diff(pr_commit, paths="*.py", create_patch=True))
+    docs = extract_docstring_from_diffs(diffs)
     import pprint
 
-    pprint.pprint(get_diffs(diffs))
+    pprint.pprint(docs)
+
     # for diff in diffs:
     #     if diff.a_blob in _diffs:
     #         print(diff)
@@ -80,19 +77,24 @@ def get_modified_functions_diff(repo_path, pr_branch, base_branch="main"):
     return modified_functions
 
 
-def extract_docstring_from_function_code(code):
+def extract_docstring_from_diffs(diffs: list[Diff]):
     """
     Test
     """
-    tree = ast.parse(code)
-    definitions = [
-        f
-        for f in ast.walk(tree)
-        if isinstance(f, ast.FunctionDef) or isinstance(f, ast.ClassDef)
-    ]
-    docs = [
-        {f.name: ast.get_docstring(f) for f in definitions},
-    ]
+
+    docs = []
+    for file_path in [diff.file_a.file_path for diff in diffs]:
+        with open(file_path, "r") as file:
+            code = file.read()
+            tree = ast.parse(code)
+            definitions = [
+                f
+                for f in ast.walk(tree)
+                if isinstance(f, ast.FunctionDef) or isinstance(f, ast.ClassDef)
+            ]
+            docs += [
+                {f.name: ast.get_docstring(f) for f in definitions},
+            ]
     return docs
 
 
