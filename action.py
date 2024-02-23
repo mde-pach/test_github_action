@@ -193,7 +193,8 @@ if __name__ == "__main__":
                 try:
                     llm_response = json.loads(response_json)
                     print(llm_response)
-                except Exception:
+                except Exception as exc:
+                    print(exc)
                     llm_response = {}
                 if llm_response.get("docstring", None):
                     pr.create_issue_comment(
