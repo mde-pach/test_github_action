@@ -43,13 +43,11 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
                 file_a_start_line = int(file_a_start_line)
                 file_a_length = int(file_a_length)
                 file_a_end_line = file_a_start_line + file_a_length - 1
-                print(file_a_start_line, file_a_length, file_a_end_line)
                 file_b_line_info = diff_line.split(" ")[2]
                 file_b_start_line, file_b_length = file_b_line_info[1:].split(",")
                 file_b_start_line = int(file_b_start_line)
                 file_b_length = int(file_b_length)
                 file_b_end_line = file_b_start_line + file_b_length - 1
-                print(file_b_start_line, file_b_length, file_b_end_line)
                 diffs.append(
                     Diff(
                         file_a=FileDiff(
@@ -192,7 +190,11 @@ if __name__ == "__main__":
                     .content
                 )
                 response_json = response.lstrip("```json").lstrip("```").rstrip("```")
-                llm_response = json.loads(response_json)
+                try:
+                    llm_response = json.loads(response_json)
+                    print(llm_response)
+                except Exception:
+                    llm_response = {}
                 if llm_response.get("docstring", None):
                     pr.create_issue_comment(
                         f"""
@@ -209,7 +211,3 @@ if __name__ == "__main__":
                         If the docstring seems to be up to date, please ignore this message and resolve the issue.
                         """
                     )
-
-        # print(doc.name)
-        # print(doc.docstring)
-        # print(doc.definition)
