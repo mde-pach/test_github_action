@@ -124,18 +124,12 @@ def extract_docstring_from_diffs(
                                         name=f.name,
                                         start_line=f.lineno,
                                         end_line=f.end_lineno,
-                                        docstring=get_docstring(f),
+                                        docstring=ast.get_docstring(f),
                                         definition=ast.unparse(f),
                                     )
 
                                 docs[file_path][f.name].diffs.append(diff)
     return docs
-
-
-def get_docstring(function_code):
-    # Parse the function code using ast.parse
-    # Extract and return the docstring if present
-    pass
 
 
 # Main execution
