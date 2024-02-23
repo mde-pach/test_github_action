@@ -14,6 +14,7 @@ class FileDiff(BaseModel):
     start_line: int
     end_line: int
     diff: str
+    diff_hash: str
 
 
 class Diff(BaseModel):
@@ -23,6 +24,7 @@ class Diff(BaseModel):
 
 class DocumentedDefinition(BaseModel):
     file: str
+    file_diff: str
     name: str
     start_line: int
     end_line: int
@@ -56,12 +58,14 @@ def get_diffs(diff_index: list[git.Diff]) -> list[Diff]:
                             start_line=start_line,
                             end_line=end_line,
                             diff=diff_item.diff.decode("utf-8"),
+                            diff_hash=diff_item.a_blob.hexsha,
                         ),
                         file_b=FileDiff(
                             file_path=diff_item.b_path,
                             start_line=start_line,
                             end_line=end_line,
                             diff=diff_item.diff.decode("utf-8"),
+                            diff_hash=diff_item.b_blob.hexsha,
                         ),
                     )
                 )
@@ -118,6 +122,7 @@ def extract_docstring_from_diffs(diffs: list[Diff]) -> list[DocumentedDefinition
                                 docs.append(
                                     DocumentedDefinition(
                                         file=file_path,
+                                        file_diff=diff.file_a.diff,
                                         name=f.name,
                                         start_line=diff.file_a.start_line,
                                         end_line=diff.file_b.end_line,
@@ -158,7 +163,7 @@ if __name__ == "__main__":
         else:
             pr.create_issue_comment(
                 f"""
-The definition of [{doc.name}](https://github.com/{repo_name}/pull/{pr}/files#diff-{commit}L{doc.start_line}-R{doc.end_line}) in file **{doc.file}** has been modified and the corresponding docstring seems
+The definition of [{doc.name}](https://github.com/{repo_name}/pull/{pr.number}/files#diff-{doc.file_diff}L{doc.start_line}-R{doc.end_line}) in file **{doc.file}** has been modified and the corresponding docstring seems
 to not be up to date regarding these changes.
 
 If the docstring seems to be up to date, please ignore this message and resolve the issue.
