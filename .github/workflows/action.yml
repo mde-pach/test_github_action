@@ -17,7 +17,7 @@ jobs:
         run: |
           git fetch origin ${{ github.head_ref }}
           git fetch origin ${{ github.base_ref }}
-          git checkout origin ${{ github.head_ref }}
+          git checkout origin/${{ github.head_ref }}
           git checkout -
           git checkout origin/${{ github.base_ref }}
           git checkout -
