@@ -2,7 +2,7 @@ import os
 import git
 import ast
 from pydantic import BaseModel
-from github import Github
+from github import Github, Commit
 
 
 class FileDiff(BaseModel):
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     for doc in docs:
         pr.create_review_comment(
             "test",
-            commit=commit,
+            commit=pr.get_commits().reversed[0],
             path=doc.file,
             line=doc.start_line,
         )
