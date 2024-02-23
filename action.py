@@ -170,6 +170,7 @@ if __name__ == "__main__":
 
     for file_path, definitions in docs.items():
         for name, definition in definitions.items():
+            print(name, definition)
             if definition.docstring is None:
                 continue
             else:
