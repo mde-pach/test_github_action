@@ -25,6 +25,7 @@ class DocumentedDefinition(BaseModel):
     file: str
     name: str
     start_line: int
+    end_line: int
     docstring: str | None
     definition: str
 
@@ -118,7 +119,8 @@ def extract_docstring_from_diffs(diffs: list[Diff]) -> list[DocumentedDefinition
                                     DocumentedDefinition(
                                         file=file_path,
                                         name=f.name,
-                                        start_line=f.lineno,
+                                        start_line=diff.file_a.start_line,
+                                        end_line=diff.file_b.end_line,
                                         docstring=ast.get_docstring(f),
                                         definition=ast.unparse(f),
                                     )
@@ -151,17 +153,17 @@ if __name__ == "__main__":
     repo = g.get_repo(repo_name)
     pr = repo.get_pull(pr_number)
     for doc in docs:
-        print(doc.file)
-        print(doc.name)
-        print(doc.docstring)
-        print(doc.start_line)
+        if doc.docstring is None:
+            continue
+        else:
+            pr.create_issue_comment(
+                f"""
+The definition of [{doc.name}](https://github.com/{repo_name}/pull/{pr}/files#diff-{commit}L{doc.start_line}-R{doc.end_line}) in file **{doc.file}** has been modified and the corresponding docstring seems
+to not be up to date regarding these changes.
 
-        pr.create_review_comment(
-            "test",
-            commit=pr.get_commits().reversed[0],
-            path=doc.file,
-            line=doc.start_line,
-        )
+If the docstring seems to be up to date, please ignore this message and resolve the issue.
+"""
+            )
         # print(doc.name)
         # print(doc.docstring)
         # print(doc.definition)
