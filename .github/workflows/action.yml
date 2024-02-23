@@ -11,18 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Fetch main
-        run: |
-          git fetch origin ${{ github.head_ref }}
-          git fetch origin ${{ github.base_ref }}
-          git checkout origin/${{ github.head_ref }}
-          git checkout -
-          git checkout origin/${{ github.base_ref }}
-          git checkout -
 
       - name: Set up Python
         uses: actions/setup-python@v2
